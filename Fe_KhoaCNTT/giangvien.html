@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Đội ngũ giảng viên Khoa Công nghệ Thông tin – danh sách giảng viên, học vị và lĩnh vực chuyên môn.">
+  <title>Đội ngũ Giảng viên | Khoa Công nghệ Thông tin</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+  <div id="header"></div>
+  <div class="header-spacer"></div>
+
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero-content">
+        <div class="breadcrumb">
+          <a href="trangchu.html">Trang chủ</a><span class="sep">›</span>
+          <span class="current">Đội ngũ Giảng viên</span>
+        </div>
+        <h1>Đội ngũ Giảng viên</h1>
+        <p>Gặp gỡ đội ngũ giảng viên tận tâm, giàu kinh nghiệm của Khoa Công nghệ Thông tin</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2.5rem" class="reveal">
+        <div
+          style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;padding:1.25rem;border-radius:var(--radius);text-align:center">
+          <div style="font-size:2rem;font-weight:800;font-family:var(--font-heading)" id="count-total">10</div>
+          <div style="font-size:0.82rem;opacity:0.85">Tổng giảng viên</div>
+        </div>
+        <div
+          style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:white;padding:1.25rem;border-radius:var(--radius);text-align:center">
+          <div style="font-size:2rem;font-weight:800;font-family:var(--font-heading)" id="count-ts">0</div>
+          <div style="font-size:0.82rem;opacity:0.85">Tiến sĩ (TS/PGS.TS)</div>
+        </div>
+        <div
+          style="background:linear-gradient(135deg,#0891b2,#06b6d4);color:white;padding:1.25rem;border-radius:var(--radius);text-align:center">
+          <div style="font-size:2rem;font-weight:800;font-family:var(--font-heading)" id="count-ths">0</div>
+          <div style="font-size:0.82rem;opacity:0.85">Thạc sĩ (ThS)</div>
+        </div>
+        <div
+          style="background:linear-gradient(135deg,#059669,#10b981);color:white;padding:1.25rem;border-radius:var(--radius);text-align:center">
+          <div style="font-size:2rem;font-weight:800;font-family:var(--font-heading)" id="count-leaders">2</div>
+          <div style="font-size:0.82rem;opacity:0.85">Ban lãnh đạo</div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-tabs reveal" id="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Tất cả</button>
+        <button class="filter-tab" data-filter="Trưởng khoa">Ban lãnh đạo</button>
+        <button class="filter-tab" data-filter="Phó trưởng khoa">Phó trưởng khoa</button>
+        <button class="filter-tab" data-filter="Giảng viên">Giảng viên</button>
+        <button class="filter-tab" data-filter="TS">Tiến sĩ</button>
+        <button class="filter-tab" data-filter="ThS">Thạc sĩ</button>
+      </div>
+
+      <!-- Faculty Grid -->
+      <div class="grid grid-4" id="faculty-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const allFaculty = getAll(DB_KEYS.faculty);
+      renderFacultyGrid(allFaculty);
+      updateStats(allFaculty);
+
+      // Filter logic
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const f = tab.dataset.filter;
+          let filtered = allFaculty;
+          if (f !== 'all') {
+            if (f === 'TS') filtered = allFaculty.filter(x => x.degree === 'TS' || x.degree === 'PGS.TS');
+            else if (f === 'ThS') filtered = allFaculty.filter(x => x.degree === 'ThS');
+            else filtered = allFaculty.filter(x => x.position === f);
+          }
+          renderFacultyGrid(filtered);
+        });
+      });
+    });
+
+    function updateStats(list) {
+      document.getElementById('count-total').textContent = list.length;
+      document.getElementById('count-ts').textContent = list.filter(x => x.degree === 'TS' || x.degree === 'PGS.TS').length;
+      document.getElementById('count-ths').textContent = list.filter(x => x.degree === 'ThS').length;
+    }
+
+    function renderFacultyGrid(list) {
+      const grid = document.getElementById('faculty-grid');
+      if (!list.length) {
+        grid.innerHTML = '<div class="no-results" style="grid-column:1/-1"><div class="icon">👩‍🏫</div><p>Không tìm thấy giảng viên nào</p></div>';
+        return;
+      }
+      list.sort((a, b) => (a.order || 99) - (b.order || 99));
+      grid.innerHTML = list.map(f => `
+        <div class="card faculty-card reveal" data-position="${f.position}" data-degree="${f.degree}">
+          <img src="${f.image}" alt="${f.name}" class="faculty-avatar">
+          <div class="faculty-name">${f.name}</div>
+          <div class="faculty-position">${f.position}</div>
+          <div class="faculty-degree" style="margin-top:0.25rem"><span class="badge badge-primary">${f.degree}</span></div>
+          <div class="faculty-spec" style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted)">${f.specialization}</div>
+          <div class="faculty-email"><span>✉</span><a href="mailto:${f.email}" style="color:var(--secondary)">${f.email}</a></div>
+        </div>`).join('');
+      // Re-init reveal
+      setTimeout(() => {
+        document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+          if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
+        });
+      }, 50);
+    }
+  </script>
+</body>
+
+</html>
