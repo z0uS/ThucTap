@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Quản trị Khoa CNTT</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+  <div class="admin-wrapper" id="admin-wrapper">
+    <div id="sidebar-placeholder"></div>
+    <main class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-card-icon blue">📝</div>
+            <div class="stat-card-info">
+              <span class="stat-card-value" id="stat-posts">0</span>
+              <div class="stat-card-label">Bài viết</div>
+              <div class="stat-card-change up">↑ Hoạt động</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green">👩‍🏫</div>
+            <div class="stat-card-info">
+              <span class="stat-card-value" id="stat-faculty">0</span>
+              <div class="stat-card-label">Giảng viên</div>
+              <div class="stat-card-change up">↑ Đầy đủ</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon amber">🏷️</div>
+            <div class="stat-card-info">
+              <span class="stat-card-value" id="stat-categories">0</span>
+              <div class="stat-card-label">Danh mục</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon purple">📢</div>
+            <div class="stat-card-info">
+              <span class="stat-card-value" id="stat-announcements">0</span>
+              <div class="stat-card-label">Thông báo</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red">👁</div>
+            <div class="stat-card-info">
+              <span class="stat-card-value" id="stat-views">0</span>
+              <div class="stat-card-label">Tổng lượt xem</div>
+              <div class="stat-card-change up">↑ Tăng trưởng</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="quick-actions">
+          <a href="posts.html" class="quick-action-btn">
+            <div class="qa-icon">📝</div>
+            <div class="qa-label">Thêm bài viết</div>
+          </a>
+          <a href="faculty-mgmt.html" class="quick-action-btn">
+            <div class="qa-icon">👩‍🏫</div>
+            <div class="qa-label">Thêm giảng viên</div>
+          </a>
+          <a href="categories.html" class="quick-action-btn">
+            <div class="qa-icon">🏷️</div>
+            <div class="qa-label">Quản lý danh mục</div>
+          </a>
+          <a href="../trangchu.html" target="_blank" class="quick-action-btn">
+            <div class="qa-icon">🌐</div>
+            <div class="qa-label">Xem website</div>
+          </a>
+        </div>
+
+        <!-- Charts row -->
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+          <div class="chart-panel">
+            <h3>📊 Bài viết theo tháng</h3>
+            <div class="bar-chart" id="month-chart"></div>
+          </div>
+          <div class="chart-panel">
+            <h3>🏷️ Phân bố danh mục</h3>
+            <div class="donut-chart" id="cat-chart">
+              <svg class="donut-svg" viewBox="0 0 100 100" width="120" height="120">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="20" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="20" stroke-dasharray="75 251"
+                  stroke-dashoffset="63" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="20" stroke-dasharray="50 251"
+                  stroke-dashoffset="-12" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" stroke-width="20" stroke-dasharray="40 251"
+                  stroke-dashoffset="-62" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" stroke-width="20" stroke-dasharray="30 251"
+                  stroke-dashoffset="-102" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="20" stroke-dasharray="56 251"
+                  stroke-dashoffset="-132" stroke-linecap="round" />
+              </svg>
+              <div class="donut-legend" id="cat-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent posts table -->
+        <div class="data-panel">
+          <div class="data-panel-header">
+            <div class="data-panel-title">📝 Bài viết gần đây</div>
+            <a href="posts.html" class="btn btn-primary btn-sm">Xem tất cả</a>
+          </div>
+          <div class="data-panel-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Danh mục</th>
+                  <th>Ngày đăng</th>
+                  <th>Lượt xem</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="recent-posts-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent announcements -->
+        <div class="data-panel">
+          <div class="data-panel-header">
+            <div class="data-panel-title">📢 Thông báo gần đây</div>
+          </div>
+          <div class="data-panel-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Loại</th>
+                  <th>Ngày</th>
+                  <th>Ưu tiên</th>
+                </tr>
+              </thead>
+              <tbody id="recent-ann-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireAdmin()) return;
+      injectAdminLayout('dashboard', 'Dashboard');
+      renderDashboardStats();
+      renderBarChart('month-chart');
+      renderCatLegend();
+      renderRecentPosts();
+      renderRecentAnn();
+    });
+
+    async function renderCatLegend() {
+      const cats = await getAll(DB_KEYS.categories);
+      const posts = await getAll(DB_KEYS.posts);
+      document.getElementById('cat-legend').innerHTML = cats.map(c => {
+        const count = posts.filter(p => p.category === c.slug || p.categoryId === c.id).length;
+        return `<div class="legend-item">
+          <div class="legend-dot" style="background:${c.color || '#3b82f6'}"></div>
+          <span style="font-size:0.78rem">${c.name} (${count})</span>
+        </div>`;
+      }).join('');
+    }
+
+    async function renderRecentPosts() {
+      let posts = await getAll(DB_KEYS.posts);
+      posts = posts.slice(0, 5);
+      document.getElementById('recent-posts-tbody').innerHTML = posts.map(p => `
+        <tr>
+          <td><strong style="font-size:0.85rem">${p.title.substring(0, 55)}${p.title.length > 55 ? '...' : ''}</strong></td>
+          <td><span class="badge badge-secondary">${p.categoryName || p.categoryId || '–'}</span></td>
+          <td style="font-size:0.8rem;color:#64748b">${formatDate(p.date)}</td>
+          <td style="font-size:0.8rem;color:#64748b">👁 ${p.views || 0}</td>
+          <td>
+            <div class="action-btns">
+              <a href="posts.html" class="action-btn edit" title="Sửa">✏️</a>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function renderRecentAnn() {
+      const list = (await getAll(DB_KEYS.announcements)).slice(0, 5);
+      const typeNames = { 'hoc-tap': 'Học tập', 'thi-lai': 'Thi lại', 'thuc-tap': 'Thực tập', 'hoc-phi': 'Học phí', 'tot-nghiep': 'Tốt nghiệp' };
+      document.getElementById('recent-ann-tbody').innerHTML = list.map(a => `
+        <tr>
+          <td><strong style="font-size:0.85rem">${a.title.substring(0, 60)}${a.title.length > 60 ? '...' : ''}</strong></td>
+          <td><span class="badge badge-secondary">${typeNames[a.type] || a.type}</span></td>
+          <td style="font-size:0.8rem;color:#64748b">${formatDate(a.date)}</td>
+          <td>${a.priority === 'high' ? '<span class="badge badge-danger">🔴 Cao</span>' : '<span class="badge" style="background:#f1f5f9;color:#64748b">Bình thường</span>'}</td>
+        </tr>`).join('');
+    }
+  </script>
+</body>
+
+</html>

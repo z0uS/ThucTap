@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Thông báo | Quản trị Khoa CNTT</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="admin-wrapper" id="admin-wrapper">
+    <div id="sidebar-placeholder"></div>
+    <main class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>📢 Quản lý Thông báo</h1>
+            <div class="page-breadcrumb">Dashboard › Thông báo</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddAnnc()">+ Thêm thông báo</button>
+        </div>
+
+        <div class="data-panel">
+          <div class="data-panel-header">
+            <div class="data-panel-title" id="annc-count"></div>
+            <div class="data-panel-actions">
+              <div class="data-panel-search">
+                <span class="search-ico">🔍</span>
+                <input type="text" id="annc-search-input" placeholder="Tìm thông báo..." oninput="renderAnncTable(this.value)">
+              </div>
+              <select class="form-control" style="padding:0.45rem 0.75rem;font-size:0.85rem;width:auto" id="type-filter-sel" onchange="filterByType()">
+                <option value="">Tất cả phân loại</option>
+                <option value="hoc-tap">📚 Học tập</option>
+                <option value="thuc-tap">💼 Thực tập</option>
+                <option value="tot-nghiep">🎓 Tốt nghiệp</option>
+                <option value="hoc-phi">💰 Học phí</option>
+                <option value="thi-lai">✍️ Thi lại</option>
+              </select>
+            </div>
+          </div>
+          <div class="data-panel-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Phân loại</th>
+                  <th>Ưu tiên</th>
+                  <th>Ngày đăng</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="annc-tbody"></tbody>
+            </table>
+          </div>
+          <div class="data-panel-footer">
+            <span id="annc-count-foot"></span>
+            <div class="pagination" id="annc-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Announcement Modal -->
+  <div class="modal-overlay" id="annc-modal">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-header">
+        <h2 class="modal-title" id="annc-modal-title">Thêm thông báo mới</h2>
+        <button class="modal-close" onclick="closeModal('annc-modal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="annc-form" onsubmit="saveAnnc(); return false;">
+          <input type="hidden" id="annc-id">
+          <div class="form-group">
+            <label class="form-label">Tiêu đề thông báo <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="annc-title" class="form-control" placeholder="Nhập tiêu đề..." required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Phân loại</label>
+              <select id="annc-type" class="form-control">
+                <option value="hoc-tap" data-name="Học tập">Học tập</option>
+                <option value="thuc-tap" data-name="Thực tập">Thực tập</option>
+                <option value="tot-nghiep" data-name="Tốt nghiệp">Tốt nghiệp</option>
+                <option value="hoc-phi" data-name="Học phí">Học phí</option>
+                <option value="thi-lai" data-name="Thi lại">Thi lại</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Năm/Tháng (Ngày đăng)</label>
+              <input type="date" id="annc-date" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nội dung <span style="color:var(--danger)">*</span></label>
+            <textarea id="annc-content" class="form-control" rows="4" placeholder="Nhập nội dung thông báo..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mức độ ưu tiên</label>
+            <select id="annc-priority" class="form-control">
+              <option value="normal">Bình thường</option>
+              <option value="high">Ghim lên đầu (Ưu tiên cao)</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('annc-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="saveAnnc()">💾 Lưu thông báo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/data.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!requireAdmin()) return;
+      injectAdminLayout('announcements', 'Quản lý Thông báo');
+      document.getElementById('annc-date').value = new Date().toISOString().split('T')[0];
+      await renderAnncTable('');
+    });
+
+    async function filterByType() {
+      const type = document.getElementById('type-filter-sel').value;
+      const searchQ = document.getElementById('annc-search-input').value;
+      let items = await getAll(DB_KEYS.announcements);
+      
+      if (type) items = items.filter(a => a.type === type);
+      if (searchQ) items = items.filter(a => a.title.toLowerCase().includes(searchQ.toLowerCase()));
+      
+      const tbody = document.getElementById('annc-tbody');
+      const ANNC_PER_PAGE = 8;
+
+      tbody.innerHTML = items.slice(0, ANNC_PER_PAGE).map(a => {
+        let badgeClass = 'secondary';
+        if (a.type === 'hoc-tap') badgeClass = 'success';
+        if (a.type === 'thi-lai') badgeClass = 'danger';
+        if (a.type === 'thuc-tap') badgeClass = 'warning';
+        if (a.type === 'tot-nghiep') badgeClass = 'primary';
+        if (a.type === 'hoc-phi') badgeClass = 'info';
+
+        let prioBadge = a.priority === 'high' ? '<span class="status-badge published">Cao</span>' : '<span class="status-badge draft">Thường</span>';
+
+        return `
+        <tr>
+          <td><strong>${a.title}</strong></td>
+          <td><span class="badge badge-${badgeClass}">${a.typeName || a.type || 'Khác'}</span></td>
+          <td>${prioBadge}</td>
+          <td style="font-size:0.82rem;color:#64748b">${formatDate(a.date)}</td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn edit" onclick="openEditAnnc('${a.id}')">✏️</button>
+              <button class="action-btn delete" onclick="confirmDeleteAnnc('${a.id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+      
+      const countEl = document.getElementById('annc-count');
+      if (countEl) countEl.textContent = `Hiển thị ${Math.min(items.length, ANNC_PER_PAGE)}/${items.length} bài viết`;
+    }
+  </script>
+</body>
+</html>
