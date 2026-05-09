@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Bài viết | Quản trị Khoa CNTT</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="admin-wrapper" id="admin-wrapper">
+    <div id="sidebar-placeholder"></div>
+    <main class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>📝 Quản lý Bài viết</h1>
+            <div class="page-breadcrumb">Dashboard › Bài viết</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddPost()">+ Thêm bài viết</button>
+        </div>
+
+        <div class="data-panel">
+          <div class="data-panel-header">
+            <div class="data-panel-title" id="posts-count"></div>
+            <div class="data-panel-actions">
+              <div class="data-panel-search">
+                <span class="search-ico">🔍</span>
+                <input type="text" id="post-search-input" placeholder="Tìm kiếm..." oninput="renderPostsTable(this.value)">
+              </div>
+              <select class="form-control" style="padding:0.45rem 0.75rem;font-size:0.85rem;width:auto" id="cat-filter-sel" onchange="filterByCat()">
+                <option value="">Tất cả danh mục</option>
+              </select>
+            </div>
+          </div>
+          <div class="data-panel-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Danh mục</th>
+                  <th>Tác giả</th>
+                  <th>Ngày đăng</th>
+                  <th>Lượt xem</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="posts-tbody"></tbody>
+            </table>
+          </div>
+          <div class="data-panel-footer">
+            <span id="posts-count-foot"></span>
+            <div class="pagination" id="posts-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Post Modal -->
+  <div class="modal-overlay" id="post-modal">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-header">
+        <h2 class="modal-title" id="post-modal-title">Thêm bài viết mới</h2>
+        <button class="modal-close" onclick="closeModal('post-modal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="post-form" onsubmit="savePost(); return false;">
+          <input type="hidden" id="post-id">
+          <div class="form-group">
+            <label class="form-label">Tiêu đề <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="post-title" class="form-control" placeholder="Nhập tiêu đề bài viết" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Danh mục</label>
+              <select id="post-category" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ngày đăng</label>
+              <input type="date" id="post-date" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tóm tắt</label>
+            <textarea id="post-excerpt" class="form-control" rows="2" placeholder="Mô tả ngắn gọn về bài viết..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nội dung <span style="color:var(--danger)">*</span></label>
+            <textarea id="post-content" class="form-control" rows="6" placeholder="Nhập nội dung đầy đủ bài viết..." required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">URL Ảnh minh họa</label>
+              <input type="url" id="post-image" class="form-control" placeholder="https://...">
+              <img id="post-img-preview" class="img-preview" style="width:100%;height:140px;border-radius:8px;margin-top:0.5rem;object-fit:cover" alt="Preview">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Người đăng</label>
+              <input type="text" id="post-author" class="form-control" placeholder="Admin" value="Admin">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('post-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="savePost()">💾 Lưu bài viết</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/data.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireAdmin()) return;
+      injectAdminLayout('posts', 'Quản lý Bài viết');
+      // Set today as default date
+      document.getElementById('post-date').value = new Date().toISOString().split('T')[0];
+      // Populate cat filter
+      const sel = document.getElementById('cat-filter-sel');
+      getAll(DB_KEYS.categories).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.slug; opt.textContent = c.name;
+        sel.appendChild(opt);
+      });
+      renderPostsTable('', 1);
+    });
+
+    function filterByCat() {
+      const slug = document.getElementById('cat-filter-sel').value;
+      const searchQ = document.getElementById('post-search-input').value;
+      // Override renderPostsTable to additionally filter by cat
+      let posts = getAll(DB_KEYS.posts);
+      if (slug) posts = posts.filter(p => p.category === slug);
+      if (searchQ) posts = posts.filter(p => p.title.toLowerCase().includes(searchQ.toLowerCase()));
+      const tbody = document.getElementById('posts-tbody');
+      const POSTS_PER_PAGE = 8;
+      tbody.innerHTML = posts.slice(0,POSTS_PER_PAGE).map(p => `
+        <tr>
+          <td><strong>${p.title}</strong></td>
+          <td><span class="badge badge-secondary">${p.categoryName||'–'}</span></td>
+          <td style="font-size:0.82rem;color:#64748b">${p.author||'Admin'}</td>
+          <td style="font-size:0.82rem;color:#64748b">${formatDate(p.date)}</td>
+          <td style="font-size:0.82rem;color:#64748b">👁 ${p.views||0}</td>
+          <td><div class="action-btns">
+            <button class="action-btn edit" onclick="openEditPost(${p.id})">✏️</button>
+            <button class="action-btn delete" onclick="confirmDeletePost(${p.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('');
+      const countEl = document.getElementById('posts-count');
+      if (countEl) countEl.textContent = `Hiển thị ${Math.min(posts.length,POSTS_PER_PAGE)}/${posts.length} bài viết`;
+    }
+  </script>
+</body>
+</html>
