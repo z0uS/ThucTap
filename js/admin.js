@@ -136,14 +136,26 @@ async function renderBarChart(containerId) {
 let currentPostPage = 1;
 const POSTS_PER_PAGE = 8;
 
-async function renderPostsTable(filter = '', page = 1) {
+async function renderPostsTable(page = 1) {
   const tbody = document.getElementById('posts-tbody');
   if (!tbody) return;
+
+  const filter = document.getElementById('post-search-input')?.value || '';
+  const catId = document.getElementById('cat-filter-sel')?.value || '';
+
   let posts = await getAll(DB_KEYS.posts);
-  if (filter) posts = posts.filter(p =>
-    p.title.toLowerCase().includes(filter.toLowerCase()) ||
-    p.categoryName?.toLowerCase().includes(filter.toLowerCase())
-  );
+
+  if (catId) {
+    posts = posts.filter(p => p.category == catId);
+  }
+
+  if (filter) {
+    posts = posts.filter(p =>
+      p.title.toLowerCase().includes(filter.toLowerCase()) ||
+      p.categoryName?.toLowerCase().includes(filter.toLowerCase())
+    );
+  }
+
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   const sliced = posts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
 
@@ -168,17 +180,19 @@ async function renderPostsTable(filter = '', page = 1) {
 
   const countEl = document.getElementById('posts-count');
   if (countEl) countEl.textContent = `Hiển thị ${sliced.length}/${posts.length} bài viết`;
+  
   renderPagination(document.getElementById('posts-pagination'), page, totalPages, (p) => {
-    currentPostPage = p; renderPostsTable(filter, p);
+    currentPostPage = p; 
+    renderPostsTable(p);
   });
 }
 
-async function populateCategorySelect(selectId, selectedSlug = '') {
+async function populateCategorySelect(selectId, selectedId = '') {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   const cats = await getAll(DB_KEYS.categories);
   sel.innerHTML = cats.map(c =>
-    `<option value="${c.slug || c.id}" data-name="${c.name}" ${(c.slug == selectedSlug || c.id == selectedSlug) ? 'selected' : ''}>${c.name}</option>`
+    `<option value="${c.id}" data-name="${c.name}" ${c.id == selectedId ? 'selected' : ''}>${c.name}</option>`
   ).join('');
 }
 
@@ -211,9 +225,9 @@ async function openEditPost(id) {
 async function savePost() {
   const idVal = document.getElementById('post-id').value;
   const catSel = document.getElementById('post-category');
-  const catSlug = catSel.value;
+  const catId = catSel.value;
   // Fallback to cat name if dataset name not found
-  const catName = catSel.options[catSel.selectedIndex]?.dataset.name || catSlug;
+  const catName = catSel.options[catSel.selectedIndex]?.dataset.name || catId;
   
   const session = dbGet(DB_KEYS.session);
   const adminId = session?.user?.id;
@@ -224,9 +238,7 @@ async function savePost() {
     excerpt: document.getElementById('post-excerpt').value.trim(),
     thumbnail: document.getElementById('post-image').value.trim(), // Use thumbnail for backend
     image: document.getElementById('post-image').value.trim(), // Fallback for frontend
-    categoryId: parseInt(catSlug) || 1, // backend expects integer
-    category: catSlug,
-    categoryName: catName,
+    categoryId: parseInt(catId) || 1, // backend expects integer
     adminId: adminId, // required by backend
     status: "published",
     author: document.getElementById('post-author').value.trim() || 'Admin'
@@ -381,7 +393,7 @@ async function renderCategoriesTable(filter = '') {
     return;
   }
   tbody.innerHTML = list.map(c => {
-    const count = posts.filter(p => p.category === c.slug || p.categoryId === c.id).length;
+    const count = posts.filter(p => p.category == c.id).length;
     return `
       <tr>
         <td><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${c.color || '#3b82f6'};margin-right:0.5rem;vertical-align:middle"></span><strong>${c.name}</strong></td>

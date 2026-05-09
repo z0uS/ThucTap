@@ -140,7 +140,6 @@
                   <th>Loại</th>
                   <th>Ngày</th>
                   <th>Ưu tiên</th>
-                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody id="recent-ann-tbody"></tbody>
@@ -160,6 +159,7 @@
       injectAdminLayout('dashboard', 'Dashboard');
       renderDashboardStats();
       renderBarChart('month-chart');
+      renderDonutChart();
       renderCatLegend();
       renderRecentPosts();
       renderRecentAnn();
@@ -169,12 +169,49 @@
       const cats = await getAll(DB_KEYS.categories);
       const posts = await getAll(DB_KEYS.posts);
       document.getElementById('cat-legend').innerHTML = cats.map(c => {
-        const count = posts.filter(p => p.category === c.slug || p.categoryId === c.id).length;
+        const count = posts.filter(p => p.category == c.id).length;
         return `<div class="legend-item">
           <div class="legend-dot" style="background:${c.color || '#3b82f6'}"></div>
           <span style="font-size:0.78rem">${c.name} (${count})</span>
         </div>`;
       }).join('');
+    }
+
+    async function renderDonutChart() {
+      const cats = await getAll(DB_KEYS.categories);
+      const posts = await getAll(DB_KEYS.posts);
+      const total = posts.length || 1;
+      const svg = document.querySelector('.donut-svg');
+      if (!svg) return;
+      
+      // Reset SVG
+      svg.innerHTML = '<circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="20" />';
+      
+      let cumulativePercent = 0;
+      const circumference = 2 * Math.PI * 40; // ~251.2
+      
+      cats.forEach(c => {
+        const count = posts.filter(p => p.category == c.id).length;
+        if (count === 0) return;
+        
+        const percent = count / total;
+        const dashArray = `${percent * circumference} ${circumference}`;
+        const dashOffset = 62.8 - (cumulativePercent * circumference);
+        
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", "50");
+        circle.setAttribute("cy", "50");
+        circle.setAttribute("r", "40");
+        circle.setAttribute("fill", "none");
+        circle.setAttribute("stroke", c.color || "#3b82f6");
+        circle.setAttribute("stroke-width", "20");
+        circle.setAttribute("stroke-dasharray", dashArray);
+        circle.setAttribute("stroke-dashoffset", dashOffset);
+        circle.setAttribute("stroke-linecap", "round");
+        
+        svg.appendChild(circle);
+        cumulativePercent += percent;
+      });
     }
 
     async function renderRecentPosts() {
@@ -203,11 +240,6 @@
           <td><span class="badge badge-secondary">${typeNames[a.type] || a.type}</span></td>
           <td style="font-size:0.8rem;color:#64748b">${formatDate(a.date)}</td>
           <td>${a.priority === 'high' ? '<span class="badge badge-danger">🔴 Cao</span>' : '<span class="badge" style="background:#f1f5f9;color:#64748b">Bình thường</span>'}</td>
-          <td>
-            <div class="action-btns">
-              <a href="announcements.html" class="action-btn edit" title="Xem/Sửa">✏️</a>
-            </div>
-          </td>
         </tr>`).join('');
     }
   </script>

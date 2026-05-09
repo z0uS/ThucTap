@@ -154,9 +154,14 @@ function initScrollEffects() {
 /* ---------- Reveal on scroll ---------- */
 function initReveal() {
   const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    entries.forEach(e => { 
+      if (e.isIntersecting) { 
+        e.target.classList.add('visible'); 
+        obs.unobserve(e.target); 
+      } 
+    });
   }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
 }
 
 /* ---------- Animated Counter ---------- */

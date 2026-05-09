@@ -190,6 +190,7 @@
       renderPagination(document.getElementById('news-pagination'), currentPage, totalPages, p => {
         currentPage = p; renderNews(); window.scrollTo({ top: 400, behavior: 'smooth' });
       });
+      initReveal();
     }
 
     async function openArticle(id) {

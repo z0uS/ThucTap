@@ -141,7 +141,7 @@
       const cats = await getAll(DB_KEYS.categories);
       const posts = await getAll(DB_KEYS.posts);
       const totalPosts = posts.length;
-      const categorized = posts.filter(p => p.category || p.categoryId).length;
+      const categorized = posts.filter(p => p.category).length;
       document.getElementById('cat-stats').innerHTML = `
         <div class="stat-card">
           <div class="stat-card-icon amber">🏷️</div>
@@ -169,9 +169,9 @@
     async function renderCatDistribution() {
       const cats = await getAll(DB_KEYS.categories);
       const posts = await getAll(DB_KEYS.posts);
-      const maxCount = Math.max(...cats.map(c => posts.filter(p => p.category === c.slug || p.categoryId === c.id).length), 1);
+      const maxCount = Math.max(...cats.map(c => posts.filter(p => p.category == c.id).length), 1);
       document.getElementById('cat-distribution').innerHTML = cats.map(c => {
-        const count = posts.filter(p => p.category === c.slug || p.categoryId === c.id).length;
+        const count = posts.filter(p => p.category == c.id).length;
         const pct = Math.round((count / maxCount) * 100);
         return `
           <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.85rem">

@@ -21,10 +21,7 @@ async function fetchAPI(endpoint, method = 'GET', body = null) {
   const options = { method, headers, cache: 'no-store' };
   if (body) options.body = JSON.stringify(body);
 
-  const url = new URL(`${API_BASE}${endpoint}`);
-  if (method === 'GET') url.searchParams.append('_t', new Date().getTime());
-  
-  const res = await fetch(url.toString(), options);
+  const res = await fetch(`${API_BASE}${endpoint}`, options);
   if (!res.ok) {
     const err = await res.text();
     throw new Error(err || 'Server error');
