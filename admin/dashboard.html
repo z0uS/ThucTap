@@ -165,13 +165,16 @@
       renderRecentAnn();
     });
 
+    const CAT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899'];
+
     async function renderCatLegend() {
       const cats = await getAll(DB_KEYS.categories);
       const posts = await getAll(DB_KEYS.posts);
-      document.getElementById('cat-legend').innerHTML = cats.map(c => {
+      document.getElementById('cat-legend').innerHTML = cats.map((c, i) => {
         const count = posts.filter(p => p.category == c.id).length;
+        const color = c.color && c.color !== '#3b82f6' ? c.color : CAT_COLORS[i % CAT_COLORS.length];
         return `<div class="legend-item">
-          <div class="legend-dot" style="background:${c.color || '#3b82f6'}"></div>
+          <div class="legend-dot" style="background:${color}"></div>
           <span style="font-size:0.78rem">${c.name} (${count})</span>
         </div>`;
       }).join('');
@@ -190,20 +193,21 @@
       let cumulativePercent = 0;
       const circumference = 2 * Math.PI * 40; // ~251.2
       
-      cats.forEach(c => {
+      cats.forEach((c, i) => {
         const count = posts.filter(p => p.category == c.id).length;
         if (count === 0) return;
         
         const percent = count / total;
         const dashArray = `${percent * circumference} ${circumference}`;
         const dashOffset = 62.8 - (cumulativePercent * circumference);
+        const color = c.color && c.color !== '#3b82f6' ? c.color : CAT_COLORS[i % CAT_COLORS.length];
         
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", "50");
         circle.setAttribute("cy", "50");
         circle.setAttribute("r", "40");
         circle.setAttribute("fill", "none");
-        circle.setAttribute("stroke", c.color || "#3b82f6");
+        circle.setAttribute("stroke", color);
         circle.setAttribute("stroke-width", "20");
         circle.setAttribute("stroke-dasharray", dashArray);
         circle.setAttribute("stroke-dashoffset", dashOffset);
